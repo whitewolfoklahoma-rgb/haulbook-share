@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HaulBook — Junk Removal Load Pricing &amp; Job Book</title>
+<style>
+  :root{
+    --ink:#1c2430; --mut:#5b6774; --line:#d7dde3; --bg:#f4f2ec; --card:#ffffff;
+    --brand:#b3540e; --brand2:#e07b24; --good:#1d7a3a; --bad:#b3261e; --warn:#fff4e0;
+    --chip:#eef1f4; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;}
+  header{background:linear-gradient(135deg,#8a3f08,var(--brand2));color:#fff;padding:14px 16px;}
+  header h1{margin:0;font-size:22px;letter-spacing:.2px;}
+  header .sub{opacity:.92;font-size:13px;margin-top:2px;}
+  nav{display:flex;flex-wrap:wrap;gap:6px;background:#fff;border-bottom:1px solid var(--line);padding:8px 10px;position:sticky;top:0;z-index:5;}
+  nav button{flex:1 1 auto;min-width:86px;padding:10px 6px;border:1px solid var(--line);background:var(--chip);border-radius:8px;font-size:14px;cursor:pointer;color:var(--ink);}
+  nav button.active{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:600;}
+  main{max-width:1060px;margin:0 auto;padding:14px 12px 60px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px;}
+  .card h2{margin:0 0 10px;font-size:17px;}
+  .card h3{margin:14px 0 8px;font-size:15px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;}
+  @media (max-width:640px){.grid,.grid3{grid-template-columns:1fr;}}
+  label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px;}
+  input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:7px;font-size:15px;background:#fff;color:var(--ink);}
+  textarea{min-height:52px;resize:vertical;}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand2);outline-offset:0;border-color:var(--brand2);}
+  .fracrow{display:flex;gap:6px;flex-wrap:wrap;}
+  .fracrow button{flex:1;min-width:56px;padding:10px 4px;border:1px solid var(--line);border-radius:8px;background:var(--chip);cursor:pointer;font-size:14px;}
+  .fracrow button.on{background:var(--brand);color:#fff;border-color:var(--brand);font-weight:700;}
+  .btn{display:inline-block;padding:11px 16px;border:none;border-radius:8px;background:var(--brand);color:#fff;font-size:15px;font-weight:600;cursor:pointer;}
+  .btn.alt{background:#3c4754;}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);}
+  .btn.small{padding:7px 10px;font-size:13px;min-height:40px;}
+  .btn:disabled{opacity:.5;cursor:not-allowed;}
+  .priceline{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:14px;}
+  .priceline b{white-space:nowrap;}
+  .bigprice{font-size:26px;font-weight:800;}
+  .three{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:8px;}
+  @media (max-width:640px){.three{grid-template-columns:1fr;}}
+  .pbox{border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;background:#fbfaf7;}
+  .pbox .lab{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;}
+  .pbox .val{font-size:21px;font-weight:800;margin-top:2px;}
+  .pbox.rec{border-color:var(--brand);background:#fdf3e7;}
+  .floorwarn{background:var(--warn);border:1px solid #e6b800;border-radius:8px;padding:10px;margin-top:10px;font-size:14px;}
+  .floorok{background:#eaf6ee;border:1px solid var(--good);border-radius:8px;padding:10px;margin-top:10px;font-size:14px;}
+  .itemrow{display:grid;grid-template-columns:1fr 74px 92px;gap:8px;align-items:end;padding:6px 0;border-bottom:1px dashed var(--line);}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top;}
+  th{color:var(--mut);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.3px;}
+  td.num,th.num{text-align:right;white-space:nowrap;}
+  .tablewrap{overflow-x:auto;}
+  .tag{display:inline-block;padding:1px 8px;border-radius:20px;font-size:12px;font-weight:600;background:var(--chip);}
+  .tag.quoted{background:#e3ecf7;} .tag.booked{background:#fdf3e7;} .tag.completed{background:#eaf6ee;} .tag.lost{background:#f7e3e1;}
+  .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  @media (max-width:800px){.statgrid{grid-template-columns:repeat(2,1fr);}}
+  .stat{border:1px solid var(--line);border-radius:8px;padding:10px;background:#fbfaf7;}
+  .stat .lab{font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.4px;}
+  .stat .val{font-size:20px;font-weight:800;margin-top:2px;}
+  .muted{color:var(--mut);font-size:13px;}
+  .rowflex{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  .spacer{flex:1;}
+  .jobcard{border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fff;}
+  .jobhead{display:flex;gap:8px;flex-wrap:wrap;align-items:baseline;cursor:pointer;}
+  .jobbody{display:none;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px;}
+  .jobbody.open{display:block;}
+  .hidden{display:none !important;}
+  #printSheet{display:none;}
+  @media print{
+    body{background:#fff;}
+    header,nav,main,.noprint{display:none !important;}
+    #printSheet{display:block !important;padding:10px;font-size:13px;color:#000;}
+    #printSheet h1{font-size:20px;margin:0 0 2px;}
+    #printSheet table td,#printSheet table th{border-bottom:1px solid #bbb;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>🚛 HaulBook</h1>
+  <div class="sub">Junk removal load pricing &amp; job book — price by the load, know your profit on every job. Works 100% offline.</div>
+</header>
+<nav id="tabs">
+  <button data-tab="quote" class="active">New Quote</button>
+  <button data-tab="jobs">Job Book</button>
+  <button data-tab="dash">Dashboard</button>
+  <button data-tab="settings">Settings</button>
+  <button data-tab="help">Help</button>
+</nav>
+<main>
+  <!-- ============ QUOTE TAB ============ -->
+  <section id="tab-quote">
+    <div class="card">
+      <h2>Customer &amp; job</h2>
+      <div class="grid">
+        <div><label>Customer name *</label><input id="qCustomer" type="text" placeholder="e.g. Mike Delgado"></div>
+        <div><label>Phone</label><input id="qPhone" type="tel" placeholder="(555) 010-2030"></div>
+        <div><label>Address</label><input id="qAddress" type="text" placeholder="Street, City"></div>
+        <div><label>Job date</label><input id="qDate" type="date"></div>
+        <div><label>How did they find you?</label>
+          <select id="qSource">
+            <option>Google</option><option>Facebook</option><option>Referral</option>
+            <option>Repeat customer</option><option>Yard sign / truck</option><option>Nextdoor</option><option>Other</option>
+          </select></div>
+        <div><label>What are we hauling? (notes)</label><input id="qDesc" type="text" placeholder="Garage cleanout, couch + boxes…"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Load size — the trade's math</h2>
+      <label>Quick pick by truck-load fraction</label>
+      <div class="fracrow" id="fracRow">
+        <button type="button" data-frac="0.25">¼ load</button>
+        <button type="button" data-frac="0.5">½ load</button>
+        <button type="button" data-frac="0.75">¾ load</button>
+        <button type="button" data-frac="1">Full load</button>
+        <button type="button" data-frac="1.5">1½ loads</button>
+        <button type="button" data-frac="2">2 loads</button>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div><label>Volume (cubic yards)</label><input inputmode="decimal" id="qYards" type="number" min="0" step="0.25" value="7"></div>
+        <div><label>Material / weight</label>
+          <select id="qMaterial">
+            <option value="light">Light household (furniture, boxes)</option>
+            <option value="mixed" selected>Mixed junk (typical cleanout)</option>
+            <option value="heavy">Heavy (concrete, dirt, roofing, debris)</option>
+          </select></div>
+        <div><label>Estimated weight</label><input id="qWeightOut" type="text" readonly value="—"></div>
+      </div>
+      <div class="grid3" style="margin-top:10px;">
+        <div><label>Estimated job hours (crew on site)</label><input inputmode="decimal" id="qHours" type="number" min="0" step="0.25" value="2.5"></div>
+        <div><label>Round-trip miles to job + dump</label><input inputmode="decimal" id="qMiles" type="number" min="0" step="1" value="30"></div>
+        <div><label>Stairs / difficult access fee ($)</label><input inputmode="decimal" id="qAccess" type="number" min="0" step="1" value="0"></div>
+      </div>
+      <h3>Heavy / bulky item upcharges</h3>
+      <div id="itemList"></div>
+      <p class="muted">Quantities update the quote live. Edit the item list and prices in Settings.</p>
+    </div>
+
+    <div class="card">
+      <h2>Your numbers</h2>
+      <div id="costLines"></div>
+      <div class="three">
+        <div class="pbox"><div class="lab">Break-even</div><div class="val" id="pBE">$0</div><div class="muted">true cost + overhead</div></div>
+        <div class="pbox rec"><div class="lab">Recommended</div><div class="val" id="pRec">$0</div><div class="muted">rate card vs. target margin — higher wins</div></div>
+        <div class="pbox"><div class="lab">Premium</div><div class="val" id="pPrem">$0</div><div class="muted">rush / weekend / nasty job</div></div>
+      </div>
+      <div class="grid" style="margin-top:12px;">
+        <div><label>Final price you'll quote ($)</label><input inputmode="decimal" id="qFinal" type="number" min="0" step="1"></div>
+        <div><label>Margin at final price</label><input id="qMarginOut" type="text" readonly value="—"></div>
+      </div>
+      <div id="floorBox"></div>
+      <div class="rowflex" style="margin-top:12px;">
+        <button class="btn" id="btnSaveQuote" type="button">Save quote</button>
+        <button class="btn alt" id="btnPrintQuote" type="button">Print quote sheet</button>
+        <button class="btn ghost" id="btnResetQuote" type="button">Start over</button>
+      </div>
+      <p class="muted" id="saveMsg"></p>
+    </div>
+  </section>
+
+  <!-- ============ JOBS TAB ============ -->
+  <section id="tab-jobs" class="hidden">
+    <div class="card">
+      <h2>Job book</h2>
+      <p class="muted">Every saved quote lives here. Mark jobs won, then complete them with the real dump weight, hours, and what you collected — that's where the true profit comes from. Tap a job to open it.</p>
+      <div id="jobList"></div>
+    </div>
+    <div class="card">
+      <h2>Dump / transfer-station log</h2>
+      <p class="muted">Disposal record from completed jobs — your receipt book at tax time.</p>
+      <div class="tablewrap"><table id="dumpTable">
+        <thead><tr><th>Date</th><th>Customer</th><th class="num">Weight (lb)</th><th class="num">Tons</th><th class="num">Fee paid</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD TAB ============ -->
+  <section id="tab-dash" class="hidden">
+    <div class="card">
+      <h2>Business at a glance (completed jobs)</h2>
+      <div class="statgrid" id="statGrid"></div>
+    </div>
+    <div class="card">
+      <h2>Where jobs come from</h2>
+      <div class="tablewrap"><table id="sourceTable">
+        <thead><tr><th>Source</th><th class="num">Jobs</th><th class="num">Revenue</th><th class="num">Profit</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>Repeat customers</h2>
+      <div id="repeatList"></div>
+    </div>
+  </section>
+
+  <!-- ============ SETTINGS TAB ============ -->
+  <section id="tab-settings" class="hidden">
+    <div class="card">
+      <h2>Company (prints on quote sheets)</h2>
+      <div class="grid">
+        <div><label>Company name</label><input id="sCompany" type="text"></div>
+        <div><label>Phone</label><input id="sPhone" type="tel"></div>
+        <div><label>Email</label><input id="sEmail" type="email"></div>
+        <div><label>Quote notes (prints on every quote)</label><input id="sNotes" type="text"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Truck &amp; rate card</h2>
+      <div class="grid3">
+        <div><label>Truck / trailer capacity (cubic yards)</label><input inputmode="decimal" id="sTruckYards" type="number" min="1" step="0.5"></div>
+        <div><label>Rate per cubic yard ($)</label><input inputmode="decimal" id="sRatePerYard" type="number" min="0" step="1"></div>
+        <div><label>Minimum job charge ($)</label><input inputmode="decimal" id="sMinCharge" type="number" min="0" step="1"></div>
+      </div>
+      <p class="muted">Industry planning band: $30–65 per cubic yard; a full 13–17 yd load typically prices $600–850; single-item pickups $79–150. Set yours to your market.</p>
+    </div>
+    <div class="card">
+      <h2>Your costs</h2>
+      <div class="grid3">
+        <div><label>Crew size (people)</label><input inputmode="decimal" id="sCrew" type="number" min="1" step="1"></div>
+        <div><label>Labor rate ($/hr per person)</label><input inputmode="decimal" id="sLaborRate" type="number" min="0" step="1"></div>
+        <div><label>Dump / transfer fee ($/ton)</label><input inputmode="decimal" id="sDumpPerTon" type="number" min="0" step="1"></div>
+        <div><label>Cost per mile ($, fuel + wear)</label><input inputmode="decimal" id="sCostPerMile" type="number" min="0" step="0.05"></div>
+        <div><label>Overhead (%)</label><input inputmode="decimal" id="sOverhead" type="number" min="0" step="1"></div>
+      </div>
+      <h3>Weight per cubic yard (lb) by material</h3>
+      <div class="grid3">
+        <div><label>Light household</label><input inputmode="decimal" id="sDensLight" type="number" min="0" step="10"></div>
+        <div><label>Mixed junk</label><input inputmode="decimal" id="sDensMixed" type="number" min="0" step="10"></div>
+        <div><label>Heavy debris</label><input inputmode="decimal" id="sDensHeavy" type="number" min="0" step="10"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Margins &amp; profit floor</h2>
+      <div class="grid3">
+        <div><label>Target margin (%)</label><input inputmode="decimal" id="sTargetMargin" type="number" min="0" max="95" step="1"></div>
+        <div><label>Profit floor — minimum margin (%)</label><input inputmode="decimal" id="sFloorMargin" type="number" min="0" max="95" step="1"></div>
+        <div><label>Premium markup over recommended (%)</label><input inputmode="decimal" id="sPremiumPct" type="number" min="0" step="1"></div>
+      </div>
+      <p class="muted">The floor is a guardrail: a quote priced below the floor price can't be saved unless you tick a deliberate override. Accidents are what it stops.</p>
+    </div>
+    <div class="card">
+      <h2>Heavy-item upcharge list</h2>
+      <div id="settingsItems"></div>
+      <div class="rowflex" style="margin-top:8px;">
+        <button class="btn ghost small" id="btnAddItem" type="button">+ Add item</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Your data</h2>
+      <div class="rowflex">
+        <button class="btn alt" id="btnExport" type="button">Export backup (JSON)</button>
+        <button class="btn ghost" id="btnImportBtn" type="button">Import backup</button>
+        <input type="file" id="fileImport" accept=".json,application/json" class="hidden">
+        <button class="btn ghost" id="btnClearDemo" type="button">Clear demo data</button>
+        <button class="btn ghost" id="btnWipe" type="button">Erase everything</button>
+      </div>
+      <p class="muted">Data lives only in this browser on this device. Export a backup before switching devices or clearing browser data. Sample jobs are marked “Sample” — clear them when you're ready to run for real.</p>
+      <p class="muted" id="dataMsg"></p>
+    </div>
+  <div id="legalSection"></div>
+</section>
+
+  <!-- ============ HELP TAB ============ -->
+  <section id="tab-help" class="hidden">
+    <div class="card">
+      <h2>How HaulBook prices a job</h2>
+      <p><b>1. Volume first.</b> Junk is priced by space in the truck: load fractions (¼ / ½ / ¾ / full) × your truck's cubic-yard capacity, or enter cubic yards directly. The rate card price is volume × your $/yard rate, never below your minimum charge, plus heavy-item upcharges and any stairs/access fee.</p>
+      <p><b>2. True cost.</b> Labor (crew × rate × hours) + disposal (estimated weight from material type × your dump $/ton) + travel (miles × cost/mile), plus your overhead %.</p>
+      <p><b>3. Three prices.</b> Break-even = true cost + overhead. Recommended = the higher of your rate-card price and the price that hits your target margin — so a heavy load that costs more to dump than the rate card expects gets caught. Premium = recommended + your markup, for rush/weekend/nasty jobs.</p>
+      <p><b>4. The profit floor.</b> Below-floor prices (under your minimum margin or under your minimum charge) trigger a red warning and block saving until you raise the price or deliberately override. Overrides are your call — the floor just makes sure it's never an accident.</p>
+      <h3>Make the numbers yours (10 minutes)</h3>
+      <p>Defaults are national planning numbers: $45/cubic yard (band $30–65), $65/ton dump fee, 250/400/900 lb per yard for light/mixed/heavy. Weigh a few real loads at your transfer station, compare against the estimates, and adjust the densities and rates in Settings until HaulBook's numbers match your scale tickets. A calculator is only as good as its inputs — this one makes yours easy to fix.</p>
+      <h3>Honest limits</h3>
+      <p>Weight is estimated from volume and material type — your scale ticket is the truth, and completed jobs record the real weight. HaulBook doesn't dispatch, invoice, or take payments; it's the pricing and job-profit book. Hazardous materials, eviction cleanouts with legal holds, and anything your local rules restrict are your call as the operator — the app prices junk, it doesn't clear you to haul it.</p>
+    </div>
+  </section>
+</main>
+
+<!-- ============ PRINT SHEET ============ -->
+<div id="printSheet"></div>
+
+<script>
+"use strict";
+/*PURE-START*/
+function r2(x){ if(!isFinite(x)) return 0; var s = x<0?-1:1; return s*Math.round((Math.abs(x)+1e-9)*100)/100; }
+function num(x, d){ var v = parseFloat(x); return isFinite(v) ? v : (d||0); }
+function clamp0(x){ x = num(x,0); return x<0?0:x; }
+function densityFor(s, material){
+  if(material==="light") return s.densLight;
+  if(material==="heavy") return s.densHeavy;
+  return s.densMixed;
+}
+function computeQuote(inp, s){
+  var yards = clamp0(inp.yards);
+  var rateBasis = Math.max(s.minCharge, yards * s.ratePerYard);
+  var upcharges = 0;
+  (inp.items||[]).forEach(function(it){ upcharges += clamp0(it.price) * clamp0(it.qty); });
+  var accessFee = clamp0(inp.accessFee);
+  var priceBasis = rateBasis + upcharges + accessFee;
+  var lbs = yards * densityFor(s, inp.material);
+  var tons = lbs / 2000;
+  var disposal = tons * s.dumpPerTon;
+  var labor = s.crewSize * s.laborRate * clamp0(inp.estHours);
+  var travel = clamp0(inp.miles) * s.costPerMile;
+  var directCost = labor + disposal + travel;
+  var overhead = directCost * (s.overheadPct/100);
+  var breakeven = directCost + overhead;
+  var floorPrice = breakeven / Math.max(0.01, 1 - s.floorMargin/100);
+  var targetPrice = breakeven / Math.max(0.01, 1 - s.targetMargin/100);
+  var recommended = Math.max(priceBasis, targetPrice);
+  var premium = recommended * (1 + s.premiumPct/100);
+  return {
+    yards: yards, rateBasis: r2(rateBasis), upcharges: r2(upcharges), accessFee: r2(accessFee),
+    priceBasis: r2(priceBasis), lbs: Math.round(lbs), tons: r2(tons), disposal: r2(disposal),
+    labor: r2(labor), travel: r2(travel), directCost: r2(directCost), overhead: r2(overhead),
+    breakeven: r2(breakeven), floorPrice: r2(floorPrice), targetPrice: r2(targetPrice),
+    recommended: r2(recommended), premium: r2(premium)
+  };
+}
+function marginAt(finalPrice, calc){ if(!finalPrice || finalPrice<=0) return 0; return (finalPrice - calc.breakeven)/finalPrice*100; }
+function computeActuals(q, s){
+  var labor = s.crewSize * s.laborRate * clamp0(q.actualHours);
+  var disposal = (clamp0(q.actualDumpLbs)/2000) * s.dumpPerTon;
+  var travel = clamp0(q.actualMiles) * s.costPerMile;
+  var direct = labor + disposal + travel;
+  var overhead = direct * (s.overheadPct/100);
+  var totalCost = direct + overhead;
+  var collected = clamp0(q.collected);
+  return { labor: r2(labor), disposal: r2(disposal), travel: r2(travel), direct: r2(direct),
+           overhead: r2(overhead), totalCost: r2(totalCost), collected: r2(collected),
+           profit: r2(collected - totalCost) };
+}
+function aggregates(quotes, s){
+  var done = quotes.filter(function(q){ return q.status==="completed"; });
+  var revenue = 0, profit = 0, days = {};
+  done.forEach(function(q){ var a = computeActuals(q, s); revenue += a.collected; profit += a.profit; days[q.date]=true; });
+  var nDays = Object.keys(days).length;
+  var bySource = {};
+  done.forEach(function(q){ var a = computeActuals(q, s); var k = q.source||"Other";
+    if(!bySource[k]) bySource[k] = {jobs:0, revenue:0, profit:0};
+    bySource[k].jobs++; bySource[k].revenue += a.collected; bySource[k].profit += a.profit; });
+  var byCust = {};
+  quotes.forEach(function(q){ if(q.status==="lost") return; var k = (q.customer||"").trim().toLowerCase(); if(!k) return;
+    if(!byCust[k]) byCust[k] = {name:q.customer, jobs:0, revenue:0};
+    byCust[k].jobs++; if(q.status==="completed") byCust[k].revenue += computeActuals(q,s).collected; });
+  var repeats = Object.keys(byCust).map(function(k){ return byCust[k]; }).filter(function(c){ return c.jobs>1; });
+  return { completedCount: done.length, revenue: r2(revenue), profit: r2(profit), truckDays: nDays,
+           revPerTruckDay: nDays? r2(revenue/nDays) : 0, bySource: bySource, repeats: repeats };
+}
+/*PURE-END*/
+
+var LS_KEY = "haulbook_v1";
+var state = null;
+
+function defaultSettings(){
+  return {
+    company: "Your Junk Removal Co.", phone: "", email: "",
+    notes: "Quote good for 14 days. We haul it, you point at it. Payment due on completion.",
+    truckYards: 14, ratePerYard: 45, minCharge: 99,
+    crewSize: 2, laborRate: 25, dumpPerTon: 65, costPerMile: 0.85, overheadPct: 10,
+    densLight: 250, densMixed: 400, densHeavy: 900,
+    targetMargin: 35, floorMargin: 25, premiumPct: 15,
+    items: [
+      {name:"Piano", price:125}, {name:"Hot tub / spa", price:150}, {name:"Gun safe", price:100},
+      {name:"Pool table", price:100}, {name:"Riding mower", price:60}, {name:"Appliance (each)", price:35},
+      {name:"Mattress set", price:25}, {name:"Exercise equipment", price:40}, {name:"Tire (each)", price:15}
+    ]
+  };
+}
+function esc(t){ return String(t==null?"":t).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function money(x){ x = r2(num(x,0)); var neg = x<0; x = Math.abs(x); var parts = x.toFixed(2).split("."); parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ","); return (neg?"-$":"$") + parts[0] + "." + parts[1]; }
+function todayStr(){ var d = new Date(); var m = ("0"+(d.getMonth()+1)).slice(-2); var day = ("0"+d.getDate()).slice(-2); return d.getFullYear()+"-"+m+"-"+day; }
+function uid(){ return "q" + Date.now().toString(36) + Math.floor(Math.random()*9999); }
+
+function save(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){
+  try{ var raw = localStorage.getItem(LS_KEY); if(raw){ state = JSON.parse(raw); if(state && state.settings && state.quotes) return; } }catch(e){}
+  state = { settings: defaultSettings(), quotes: [], seeded: true };
+  seedSamples();
+  save();
+}
+function seedSamples(){
+  var s = state.settings;
+  function mk(o){ o.calc = computeQuote(o, s); o.id = uid() + Math.floor(Math.random()*999); state.quotes.push(o); }
+  mk({ date:"2026-10-20", customer:"Mike Delgado", phone:"(555) 014-2210", address:"418 Elm St", source:"Repeat customer",
+       desc:"Couch + mattress set pickup", yards:1.5, material:"light", estHours:0.75, miles:12, accessFee:0,
+       items:[{name:"Mattress set", price:25, qty:1}], finalPrice:124, override:false, status:"completed",
+       actualHours:0.75, actualDumpLbs:375, actualMiles:12, collected:124, sample:true });
+  mk({ date:"2026-10-24", customer:"Mike Delgado", phone:"(555) 014-2210", address:"418 Elm St", source:"Referral",
+       desc:"Garage cleanout + hot tub removal", yards:7, material:"mixed", estHours:2.5, miles:30, accessFee:0,
+       items:[{name:"Hot tub / spa", price:150, qty:1}], finalPrice:465, override:false, status:"completed",
+       actualHours:2, actualDumpLbs:3000, actualMiles:30, collected:465, sample:true });
+  mk({ date:"2026-10-24", customer:"Sarah Nguyen", phone:"(555) 733-9041", address:"27 Oak Hollow Ln", source:"Google",
+       desc:"Estate cleanout — house + shed", yards:10.5, material:"mixed", estHours:3.5, miles:22, accessFee:0,
+       items:[{name:"Piano", price:125, qty:1}], finalPrice:575, override:false, status:"completed",
+       actualHours:3, actualDumpLbs:4300, actualMiles:22, collected:575, sample:true });
+  mk({ date:"2026-10-27", customer:"Tom Becker", phone:"(555) 902-1187", address:"9 Birchwood Dr", source:"Facebook",
+       desc:"Quarter-load furniture pickup", yards:3.5, material:"light", estHours:1.5, miles:14, accessFee:0,
+       items:[], finalPrice:0, override:false, status:"quoted",
+       actualHours:0, actualDumpLbs:0, actualMiles:0, collected:0, sample:true });
+  var q4 = null;
+  mk({ date:"2026-10-29", customer:"Lisa Tran", phone:"(555) 660-4729", address:"1500 Industrial Pkwy", source:"Google",
+       desc:"Construction debris — full load, heavy", yards:14, material:"heavy", estHours:4, miles:18, accessFee:0,
+       items:[], finalPrice:0, override:false, status:"booked",
+       actualHours:0, actualDumpLbs:0, actualMiles:0, collected:0, sample:true });
+  state.quotes.forEach(function(q){ if(!q.finalPrice){ q.finalPrice = q.calc.recommended; } });
+}
+</script>
+<script>
+"use strict";
+function $(id){ return document.getElementById(id); }
+var lastRecommended = 0;
+
+function showTab(name){
+  ["quote","jobs","dash","settings","help"].forEach(function(t){
+    $("tab-"+t).classList.toggle("hidden", t!==name);
+  });
+  var btns = document.querySelectorAll("#tabs button");
+  btns.forEach(function(b){ b.classList.toggle("active", b.getAttribute("data-tab")===name); });
+  if(name==="jobs") renderJobs();
+  if(name==="dash") renderDash();
+  window.scrollTo(0,0);
+}
+
+/* ---------- Quote builder ---------- */
+function gatherItems(){
+  var out = [];
+  state.settings.items.forEach(function(it, i){
+    var q = num($("qi_"+i) ? $("qi_"+i).value : 0, 0);
+    if(q>0) out.push({ name: it.name, price: it.price, qty: q });
+  });
+  return out;
+}
+function gatherQuoteInput(){
+  return {
+    yards: num($("qYards").value, 0), material: $("qMaterial").value,
+    estHours: num($("qHours").value, 0), miles: num($("qMiles").value, 0),
+    accessFee: num($("qAccess").value, 0), items: gatherItems()
+  };
+}
+function currentCalc(){ return computeQuote(gatherQuoteInput(), state.settings); }
+
+function renderItemInputs(){
+  var html = "";
+  state.settings.items.forEach(function(it, i){
+    html += '<div class="itemrow"><div><b>'+esc(it.name)+'</b> <span class="muted">'+money(it.price)+' each</span></div>'
+      + '<div><label>Qty</label><input inputmode="decimal" type="number" min="0" step="1" value="0" id="qi_'+i+'" class="recalc"></div>'
+      + '<div><label>Line total</label><input type="text" readonly id="ql_'+i+'" value="$0.00"></div></div>';
+  });
+  $("itemList").innerHTML = html;
+  bindRecalc();
+}
+function recalc(){
+  var s = state.settings, c = currentCalc(), inp = gatherQuoteInput();
+  state.settings.items.forEach(function(it, i){
+    var q = num($("qi_"+i) ? $("qi_"+i).value : 0, 0);
+    if($("ql_"+i)) $("ql_"+i).value = money(it.price * q);
+  });
+  $("qWeightOut").value = c.lbs.toLocaleString() + " lb (" + c.tons.toFixed(2) + " tons)";
+  var lines = "";
+  function row(l, v){ return '<div class="priceline"><span>'+l+'</span><b>'+v+'</b></div>'; }
+  lines += row("Rate card: "+c.yards+" yd × "+money(s.ratePerYard)+"/yd (min "+money(s.minCharge)+")", money(c.rateBasis));
+  if(c.upcharges>0) lines += row("Heavy-item upcharges", money(c.upcharges));
+  if(c.accessFee>0) lines += row("Stairs / access fee", money(c.accessFee));
+  lines += row("<b>Rate-card price</b>", "<b>"+money(c.priceBasis)+"</b>");
+  lines += row("Labor: "+s.crewSize+" crew × "+money(s.laborRate)+"/hr × "+inp.estHours+" hr", money(c.labor));
+  lines += row("Disposal: "+c.tons.toFixed(2)+" tons × "+money(s.dumpPerTon)+"/ton", money(c.disposal));
+  lines += row("Travel: "+inp.miles+" mi × "+money(s.costPerMile)+"/mi", money(c.travel));
+  lines += row("Overhead ("+s.overheadPct+"%)", money(c.overhead));
+  lines += row("<b>Break-even (true cost)</b>", "<b>"+money(c.breakeven)+"</b>");
+  lines += row("Price needed for "+s.targetMargin+"% target margin", money(c.targetPrice));
+  lines += row("Profit floor price ("+s.floorMargin+"% minimum margin)", money(c.floorPrice));
+  $("costLines").innerHTML = lines;
+  $("pBE").textContent = money(c.breakeven);
+  $("pRec").textContent = money(c.recommended);
+  $("pPrem").textContent = money(c.premium);
+  var fin = $("qFinal");
+  if(fin.value==="" || num(fin.value,0) === lastRecommended){ fin.value = c.recommended; }
+  lastRecommended = c.recommended;
+  var fp = num(fin.value, 0);
+  var m = marginAt(fp, c);
+  $("qMarginOut").value = fp>0 ? (m.toFixed(1) + "%  (" + money(fp - c.breakeven) + " over break-even)") : "—";
+  var below = fp>0 && (fp < c.floorPrice || fp < s.minCharge);
+  if(fp>0 && below){
+    $("floorBox").innerHTML = '<div class="floorwarn"><b>⚠ Below your profit floor.</b> Floor price is '+money(c.floorPrice)
+      +' ('+s.floorMargin+'% minimum margin) and your minimum charge is '+money(s.minCharge)+'. At '+money(fp)
+      +' your margin is '+m.toFixed(1)+'%. Raise the price, or tick the box to override on purpose.'
+      +'<div style="margin-top:8px;"><label style="color:var(--ink);font-size:14px;"><input type="checkbox" id="qOverride" style="width:auto;"> I know this is below my floor — save it anyway</label></div></div>';
+  } else if(fp>0){
+    $("floorBox").innerHTML = '<div class="floorok"><b>✓ Above your floor.</b> Margin at this price: '+m.toFixed(1)+'% (floor: '+s.floorMargin+'%).</div>';
+  } else {
+    $("floorBox").innerHTML = "";
+  }
+  return c;
+}
+function bindRecalc(){
+  document.querySelectorAll(".recalc").forEach(function(el){
+    el.removeEventListener("input", recalc); el.addEventListener("input", recalc);
+  });
+}
+function resetQuoteForm(){
+  $("qCustomer").value=""; $("qPhone").value=""; $("qAddress").value=""; $("qDesc").value="";
+  $("qDate").value = todayStr(); $("qYards").value = 7; $("qHours").value = 2.5; $("qMiles").value = 30; $("qAccess").value = 0;
+  $("qMaterial").value = "mixed"; $("qFinal").value=""; lastRecommended = 0;
+  document.querySelectorAll("#fracRow button").forEach(function(b){ b.classList.remove("on"); });
+  renderItemInputs(); recalc(); $("saveMsg").textContent = "";
+}
+function saveQuote(){
+  var customer = $("qCustomer").value.trim();
+  if(!customer){ $("saveMsg").textContent = "Add a customer name first — a quote with no name is a quote you'll lose."; $("qCustomer").focus(); return; }
+  var c = recalc();
+  var fp = num($("qFinal").value, 0);
+  var ov = $("qOverride") ? $("qOverride").checked : false;
+  var below = fp < c.floorPrice || fp < state.settings.minCharge;
+  if(below && !ov){ $("saveMsg").textContent = "Blocked by your profit floor — raise the price or tick the override box."; return; }
+  var inp = gatherQuoteInput();
+  var q = {
+    id: uid(), date: $("qDate").value || todayStr(), customer: customer, phone: $("qPhone").value.trim(),
+    address: $("qAddress").value.trim(), source: $("qSource").value, desc: $("qDesc").value.trim(),
+    yards: inp.yards, material: inp.material, estHours: inp.estHours, miles: inp.miles, accessFee: inp.accessFee,
+    items: inp.items, calc: c, finalPrice: fp, override: !!ov, status: "quoted",
+    actualHours: 0, actualDumpLbs: 0, actualMiles: inp.miles, collected: 0, sample: false
+  };
+  state.quotes.push(q); save();
+  $("saveMsg").textContent = "Saved. Find it in the Job Book — mark it won when the customer says yes.";
+  showTab("jobs");
+}
+/* ---------- Job book ---------- */
+function findQuote(id){ for(var i=0;i<state.quotes.length;i++){ if(state.quotes[i].id===id) return state.quotes[i]; } return null; }
+function statusTag(st){ return '<span class="tag '+st+'">'+st.charAt(0).toUpperCase()+st.slice(1)+'</span>'; }
+function renderJobs(){
+  var list = state.quotes.slice().sort(function(a,b){ return (b.date||"").localeCompare(a.date||""); });
+  if(!list.length){ $("jobList").innerHTML = '<p class="muted">No jobs yet. Build your first quote in the New Quote tab.</p>'; }
+  else{
+    $("jobList").innerHTML = list.map(function(q){
+      var a = q.status==="completed" ? computeActuals(q, state.settings) : null;
+      var profitLine = a ? ' · profit <b>'+money(a.profit)+'</b>' : '';
+      return '<div class="jobcard"><div class="jobhead" data-open="'+q.id+'">'
+        + '<b>'+esc(q.date)+'</b> <span><b>'+esc(q.customer)+'</b>'+(q.sample?' <span class="tag">Sample</span>':'')+'</span> '
+        + statusTag(q.status) + '<span class="muted">'+esc(q.desc||"")+'</span><span class="spacer"></span>'
+        + '<span>'+q.calc.yards+' yd · quoted <b>'+money(q.finalPrice)+'</b>'+profitLine+'</span></div>'
+        + '<div class="jobbody" id="jb_'+q.id+'">' + jobBody(q) + '</div></div>';
+    }).join("");
+  }
+  document.querySelectorAll("[data-open]").forEach(function(el){
+    el.addEventListener("click", function(){ var b = $("jb_"+el.getAttribute("data-open")); if(b) b.classList.toggle("open"); });
+  });
+  document.querySelectorAll("[data-act]").forEach(function(el){
+    el.addEventListener("click", function(){ jobAction(el.getAttribute("data-act"), el.getAttribute("data-id")); });
+  });
+  renderDump();
+}
+function jobBody(q){
+  var c = q.calc, s = state.settings;
+  var items = (q.items||[]).map(function(it){ return esc(it.name)+" ×"+it.qty+" — "+money(it.price*it.qty); }).join("<br>") || "None";
+  var h = '<div class="grid"><div>'
+    + '<div class="priceline"><span>Volume / material</span><b>'+c.yards+' yd · '+esc(q.material)+'</b></div>'
+    + '<div class="priceline"><span>Rate-card price</span><b>'+money(c.priceBasis)+'</b></div>'
+    + '<div class="priceline"><span>Break-even</span><b>'+money(c.breakeven)+'</b></div>'
+    + '<div class="priceline"><span>Recommended / Premium</span><b>'+money(c.recommended)+' / '+money(c.premium)+'</b></div>'
+    + '<div class="priceline"><span>Final price</span><b>'+money(q.finalPrice)+'</b></div>'
+    + '<div class="priceline"><span>Upcharges</span><b style="white-space:normal;text-align:right;">'+items+'</b></div>'
+    + '<div class="priceline"><span>Source</span><b>'+esc(q.source||"Other")+'</b></div>'
+    + (q.phone?'<div class="priceline"><span>Phone</span><b>'+esc(q.phone)+'</b></div>':"")
+    + (q.address?'<div class="priceline"><span>Address</span><b style="white-space:normal;text-align:right;">'+esc(q.address)+'</b></div>':"")
+    + '</div><div>'
+    + '<label>Status</label><select id="st_'+q.id+'">'
+    + ["quoted","booked","completed","lost"].map(function(st){ return '<option value="'+st+'"'+(q.status===st?" selected":"")+'>'+st.charAt(0).toUpperCase()+st.slice(1)+'</option>'; }).join("")
+    + '</select>'
+    + '<h3>Actuals (when the job is done)</h3>'
+    + '<label>Actual crew hours</label><input inputmode="decimal" type="number" min="0" step="0.25" id="ah_'+q.id+'" value="'+num(q.actualHours,0)+'">'
+    + '<label style="margin-top:6px;">Actual dump weight (lb, from scale ticket)</label><input inputmode="decimal" type="number" min="0" step="1" id="ad_'+q.id+'" value="'+num(q.actualDumpLbs,0)+'">'
+    + '<label style="margin-top:6px;">Actual round-trip miles</label><input inputmode="decimal" type="number" min="0" step="1" id="am_'+q.id+'" value="'+num(q.actualMiles,0)+'">'
+    + '<label style="margin-top:6px;">Amount collected ($)</label><input inputmode="decimal" type="number" min="0" step="1" id="ac_'+q.id+'" value="'+num(q.collected,0)+'">'
+    + '<div class="rowflex" style="margin-top:10px;">'
+    + '<button class="btn small" data-act="save" data-id="'+q.id+'" type="button">Save job</button>'
+    + '<button class="btn alt small" data-act="print" data-id="'+q.id+'" type="button">Print quote</button>'
+    + '<button class="btn ghost small" data-act="dup" data-id="'+q.id+'" type="button">Duplicate</button>'
+    + '<button class="btn ghost small" data-act="del" data-id="'+q.id+'" type="button">Delete</button>'
+    + '</div><p class="muted" id="jm_'+q.id+'"></p>'
+    + '</div></div>';
+  if(q.status==="completed"){
+    var a = computeActuals(q, s);
+    h += '<div class="floorok"><b>True profit: '+money(a.profit)+'</b> — collected '+money(a.collected)+' − costs '+money(a.totalCost)
+      +' (labor '+money(a.labor)+', dump '+money(a.disposal)+', travel '+money(a.travel)+', overhead '+money(a.overhead)+').</div>';
+  }
+  return h;
+}
+function jobAction(act, id){
+  var q = findQuote(id); if(!q) return;
+  if(act==="del"){
+    if(!confirm("Delete this job ("+q.customer+")? This can't be undone.")) return;
+    state.quotes = state.quotes.filter(function(x){ return x.id!==id; }); save(); renderJobs(); return;
+  }
+  if(act==="print"){ printQuote(q); return; }
+  if(act==="dup"){
+    var c = JSON.parse(JSON.stringify(q));
+    c.id = uid(); c.date = todayStr(); c.status = "quoted"; c.sample = false;
+    c.actualHours = 0; c.actualDumpLbs = 0; c.actualMiles = c.miles; c.collected = 0;
+    state.quotes.push(c); save(); renderJobs();
+    var nb = $("jb_"+c.id); if(nb) nb.classList.add("open");
+    var nm = $("jm_"+c.id); if(nm) nm.textContent = "Duplicated from the " + (q.date || "") + " job for " + q.customer + " — same quote, dated today, actuals and collected reset to zero.";
+    return;
+  }
+  if(act==="save"){
+    q.status = $("st_"+id).value;
+    q.actualHours = num($("ah_"+id).value, 0);
+    q.actualDumpLbs = num($("ad_"+id).value, 0);
+    q.actualMiles = num($("am_"+id).value, 0);
+    q.collected = num($("ac_"+id).value, 0);
+    save(); renderJobs();
+    var b = $("jb_"+id); if(b) b.classList.add("open");
+    var m = $("jm_"+id); if(m) m.textContent = "Saved.";
+  }
+}
+function renderDump(){
+  var done = state.quotes.filter(function(q){ return q.status==="completed"; })
+    .sort(function(a,b){ return (a.date||"").localeCompare(b.date||""); });
+  var tb = document.querySelector("#dumpTable tbody");
+  if(!done.length){ tb.innerHTML = '<tr><td colspan="5" class="muted">No completed jobs yet.</td></tr>'; return; }
+  tb.innerHTML = done.map(function(q){
+    var a = computeActuals(q, state.settings);
+    return '<tr><td>'+esc(q.date)+'</td><td>'+esc(q.customer)+'</td><td class="num">'+num(q.actualDumpLbs,0).toLocaleString()+'</td><td class="num">'+(num(q.actualDumpLbs,0)/2000).toFixed(2)+'</td><td class="num">'+money(a.disposal)+'</td></tr>';
+  }).join("");
+}
+
+/* ---------- Dashboard ---------- */
+function renderDash(){
+  var agg = aggregates(state.quotes, state.settings);
+  var quoted = state.quotes.filter(function(q){ return q.status==="quoted"; }).length;
+  var booked = state.quotes.filter(function(q){ return q.status==="booked"; }).length;
+  var decided = state.quotes.filter(function(q){ return q.status!=="quoted"; }).length;
+  var won = state.quotes.filter(function(q){ return q.status==="booked"||q.status==="completed"; }).length;
+  var winRate = decided? Math.round(won/decided*100) : 0;
+  var stats = [
+    ["Completed jobs", agg.completedCount], ["Revenue collected", money(agg.revenue)],
+    ["True profit", money(agg.profit)], ["Truck-days worked", agg.truckDays],
+    ["Revenue / truck-day", money(agg.revPerTruckDay)], ["Avg profit / job", agg.completedCount? money(agg.profit/agg.completedCount) : "$0.00"],
+    ["Open quotes", quoted], ["Booked (not yet done)", booked], ["Win rate", decided? winRate+"%" : "—"]
+  ];
+  $("statGrid").innerHTML = stats.map(function(x){ return '<div class="stat"><div class="lab">'+x[0]+'</div><div class="val">'+x[1]+'</div></div>'; }).join("");
+  var rows = Object.keys(agg.bySource).sort().map(function(k){
+    var v = agg.bySource[k];
+    return '<tr><td>'+esc(k)+'</td><td class="num">'+v.jobs+'</td><td class="num">'+money(v.revenue)+'</td><td class="num">'+money(v.profit)+'</td></tr>';
+  }).join("");
+  document.querySelector("#sourceTable tbody").innerHTML = rows || '<tr><td colspan="4" class="muted">No completed jobs yet.</td></tr>';
+  $("repeatList").innerHTML = agg.repeats.length
+    ? agg.repeats.map(function(c){ return '<div class="priceline"><span><b>'+esc(c.name)+'</b> — '+c.jobs+' jobs</span><b>'+money(c.revenue)+' collected</b></div>'; }).join("")
+    : '<p class="muted">No repeat customers yet — they\'ll show up here after a second job.</p>';
+}
+
+/* ---------- Print ---------- */
+function buildPrintHTML(q){
+  var s = state.settings, c = q.calc;
+  var rows = '<tr><td>Junk removal — '+c.yards+' cubic yards ('+esc(q.material)+')</td><td class="num">'+money(c.rateBasis)+'</td></tr>';
+  (q.items||[]).forEach(function(it){ rows += '<tr><td>'+esc(it.name)+' × '+it.qty+'</td><td class="num">'+money(it.price*it.qty)+'</td></tr>'; });
+  if(c.accessFee>0) rows += '<tr><td>Stairs / difficult access</td><td class="num">'+money(c.accessFee)+'</td></tr>';
+  if(q.finalPrice !== c.priceBasis) rows += '<tr><td><i>Adjusted final price</i></td><td class="num"><i>'+money(q.finalPrice)+'</i></td></tr>';
+  return '<h1>'+esc(s.company)+'</h1>'
+    + '<div>'+esc(s.phone)+(s.email? ' · '+esc(s.email):'')+'</div>'
+    + '<h2 style="margin:14px 0 4px;">Junk Removal Quote</h2>'
+    + '<div><b>Customer:</b> '+esc(q.customer)+(q.phone? ' · '+esc(q.phone):'')+'</div>'
+    + (q.address? '<div><b>Address:</b> '+esc(q.address)+'</div>':'')
+    + '<div><b>Date:</b> '+esc(q.date)+'</div>'
+    + (q.desc? '<div><b>Job:</b> '+esc(q.desc)+'</div>':'')
+    + '<table style="margin-top:10px;"><thead><tr><th>Description</th><th class="num">Amount</th></tr></thead><tbody>'+rows+'</tbody></table>'
+    + '<h2 style="margin:12px 0 2px;">Total: '+money(q.finalPrice)+'</h2>'
+    + '<div>Estimated load weight: '+c.lbs.toLocaleString()+' lb. Final disposal charged by actual scale weight may vary on heavy debris.</div>'
+    + '<div style="margin-top:8px;">'+esc(s.notes)+'</div>';
+}
+function printQuote(q){
+  $("printSheet").innerHTML = buildPrintHTML(q);
+  window.print();
+}
+/* ---------- Settings ---------- */
+var SET_FIELDS = [
+  ["sCompany","company","text"],["sPhone","phone","text"],["sEmail","email","text"],["sNotes","notes","text"],
+  ["sTruckYards","truckYards","num"],["sRatePerYard","ratePerYard","num"],["sMinCharge","minCharge","num"],
+  ["sCrew","crewSize","num"],["sLaborRate","laborRate","num"],["sDumpPerTon","dumpPerTon","num"],
+  ["sCostPerMile","costPerMile","num"],["sOverhead","overheadPct","num"],
+  ["sDensLight","densLight","num"],["sDensMixed","densMixed","num"],["sDensHeavy","densHeavy","num"],
+  ["sTargetMargin","targetMargin","num"],["sFloorMargin","floorMargin","num"],["sPremiumPct","premiumPct","num"]
+];
+function fillSettings(){
+  SET_FIELDS.forEach(function(f){ $(f[0]).value = state.settings[f[1]]; });
+  renderSettingsItems();
+}
+function readSettings(){
+  SET_FIELDS.forEach(function(f){
+    if(f[2]==="num"){
+      var v = num($(f[0]).value, state.settings[f[1]]);
+      if(f[1]==="targetMargin"||f[1]==="floorMargin") v = Math.min(95, Math.max(0, v));
+      else if(f[1]==="crewSize") v = Math.max(1, Math.round(v));
+      else v = Math.max(0, v);
+      state.settings[f[1]] = v;
+    } else state.settings[f[1]] = $(f[0]).value;
+  });
+  save(); renderItemInputs(); recalc();
+}
+function renderSettingsItems(){
+  $("settingsItems").innerHTML = state.settings.items.map(function(it, i){
+    return '<div class="itemrow" style="grid-template-columns:1fr 110px 70px;">'
+      + '<div><label>Item</label><input type="text" id="si_n_'+i+'" value="'+esc(it.name)+'"></div>'
+      + '<div><label>Upcharge $</label><input inputmode="decimal" type="number" min="0" step="1" id="si_p_'+i+'" value="'+it.price+'"></div>'
+      + '<div><button class="btn ghost small" data-delitem="'+i+'" type="button">Remove</button></div></div>';
+  }).join("");
+  state.settings.items.forEach(function(it, i){
+    $("si_n_"+i).addEventListener("change", function(){ state.settings.items[i].name = this.value; save(); renderItemInputs(); recalc(); });
+    $("si_p_"+i).addEventListener("change", function(){ state.settings.items[i].price = Math.max(0, num(this.value,0)); save(); renderItemInputs(); recalc(); });
+  });
+  document.querySelectorAll("[data-delitem]").forEach(function(b){
+    b.addEventListener("click", function(){
+      state.settings.items.splice(num(b.getAttribute("data-delitem"),0), 1); save(); renderSettingsItems(); renderItemInputs(); recalc();
+    });
+  });
+}
+
+/* ---------- Data ---------- */
+function downloadBackup(){
+  var blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "haulbook-backup.json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 500);
+  $("dataMsg").textContent = "Backup downloaded.";
+}
+function importBackup(file){
+  var reader = new FileReader();
+  reader.onload = function(){
+    try{
+      var parsed = JSON.parse(reader.result);
+      if(!parsed || !parsed.settings || !Array.isArray(parsed.quotes)) throw new Error("shape");
+      state = parsed; save();
+      fillSettings(); resetQuoteForm(); renderJobs();
+      $("dataMsg").textContent = "Backup imported — "+state.quotes.length+" jobs loaded.";
+    }catch(e){
+      $("dataMsg").textContent = "That file couldn't be read as a HaulBook backup. Nothing was changed.";
+    }
+  };
+  reader.onerror = function(){ $("dataMsg").textContent = "Couldn't read that file. Nothing was changed."; };
+  reader.readAsText(file);
+}
+
+/* ---------- Init ---------- */
+function init(){
+  load();
+  fillSettings();
+  document.querySelectorAll("#tabs button").forEach(function(b){
+    b.addEventListener("click", function(){ showTab(b.getAttribute("data-tab")); });
+  });
+  document.querySelectorAll("#fracRow button").forEach(function(b){
+    b.addEventListener("click", function(){
+      document.querySelectorAll("#fracRow button").forEach(function(x){ x.classList.remove("on"); });
+      b.classList.add("on");
+      var yards = num(b.getAttribute("data-frac"),0) * state.settings.truckYards;
+      $("qYards").value = Math.round(yards*4)/4;
+      recalc();
+    });
+  });
+  ["qYards","qHours","qMiles","qAccess"].forEach(function(id){ $(id).addEventListener("input", recalc); });
+  $("qMaterial").addEventListener("change", recalc);
+  $("qFinal").addEventListener("input", recalc);
+  $("qYards").addEventListener("input", function(){ document.querySelectorAll("#fracRow button").forEach(function(x){ x.classList.remove("on"); }); });
+  $("btnSaveQuote").addEventListener("click", saveQuote);
+  $("btnResetQuote").addEventListener("click", resetQuoteForm);
+  $("btnPrintQuote").addEventListener("click", function(){
+    var inp = gatherQuoteInput(), c = recalc();
+    printQuote({ date: $("qDate").value || todayStr(), customer: $("qCustomer").value.trim() || "(customer)",
+      phone: $("qPhone").value.trim(), address: $("qAddress").value.trim(), desc: $("qDesc").value.trim(),
+      material: inp.material, items: inp.items, calc: c, finalPrice: num($("qFinal").value, c.recommended) });
+  });
+  SET_FIELDS.forEach(function(f){ $(f[0]).addEventListener("change", readSettings); });
+  $("btnAddItem").addEventListener("click", function(){
+    state.settings.items.push({name:"New item", price:25}); save(); renderSettingsItems(); renderItemInputs(); recalc();
+  });
+  $("btnExport").addEventListener("click", downloadBackup);
+  $("btnImportBtn").addEventListener("click", function(){ $("fileImport").click(); });
+  $("fileImport").addEventListener("change", function(){ if(this.files && this.files[0]) importBackup(this.files[0]); this.value=""; });
+  $("btnClearDemo").addEventListener("click", function(){
+    var n = state.quotes.filter(function(q){ return q.sample; }).length;
+    state.quotes = state.quotes.filter(function(q){ return !q.sample; }); save(); renderJobs();
+    $("dataMsg").textContent = n ? ("Cleared "+n+" sample jobs.") : "No sample jobs to clear.";
+  });
+  $("btnWipe").addEventListener("click", function(){
+    if(!confirm("Erase ALL HaulBook data (settings + every job) and start fresh? Export a backup first if unsure.")) return;
+    try{ localStorage.removeItem(LS_KEY); }catch(e){}
+    state = { settings: defaultSettings(), quotes: [], seeded: false };
+    save(); fillSettings(); resetQuoteForm(); renderJobs();
+    $("dataMsg").textContent = "Everything erased. Fresh start.";
+  });
+  resetQuoteForm();
+  renderJobs();
+}
+document.addEventListener("DOMContentLoaded", init);
+
+/* ================= Legal — Terms of Use acceptance (catalog pattern v1.0) ================= */
+var TERMS_VERSION = "1.0";
+var LEGAL_APP_NAME = "HaulBook";
+var LEGAL_HAS_DISCLAIMER = true;
+var LEGAL_TERMS_HTML = "<h3>Terms of Use \u2014 White Wolf Digital Apps</h3><p><b>Version 1.0 (DRAFT \u2014 pending attorney review)</b></p><p><b>Seller: White Wolf Tree Service LLC, selling digital products under the name \"White Wolf Digital\"</b></p><p><b>Contact: whitewolfoklahoma@gmail.com</b></p><h4>1. What you're buying</h4><p>Our apps (including ForgeFit AI, ForgeKitchen, TreeBid Pro, SnowBid,</p><p>WashPrice Pro, RoofSquares, JobProfit Tracker, PastureLedger, and the other</p><p>titles sold under White Wolf Digital) are single-file software tools. When</p><p>you buy one, you are buying a <b>license to use the file</b>, not ownership of</p><p>the software itself.</p><h4>2. Your license</h4><ul><li>You may use the app for your own personal or business work.</li><li>You may open it on your own devices (phone, tablet, computer) and move your</li></ul><p>  own data between them using the app's built-in backup/export tools.</p><ul><li>You may <b>not</b> resell, redistribute, give away, upload, or share the app</li></ul><p>  file (or a copy of it) with anyone else \u2014 including posting it online,</p><p>  bundling it with other products, or selling access to it.</p><ul><li>You may <b>not</b> claim the app as your own work, remove its branding or</li></ul><p>  notices, or use it to build a competing product for resale.</p><ul><li>One purchase = one buyer. A business purchase covers the buyer and their</li></ul><p>  own employees using it for that business's work; it does not cover other</p><p>  businesses.</p><h4>3. Your data stays yours \u2014 and stays on your device</h4><ul><li>The current versions of our apps run <b>entirely on your device</b>. They have</li></ul><p>  no accounts, no sign-in, no analytics, and they collect, transmit, and store</p><p>  <b>none</b> of your information on any server. We never see your data.</p><ul><li>Your records are stored in your browser/app storage on your device. **You</li></ul><p>  are responsible for backing them up** using the app's export tools. If you</p><p>  clear your browser data, lose your device, or uninstall the app, your</p><p>  records may be permanently lost, and we cannot recover them \u2014 we never had</p><p>  a copy.</p><ul><li>Files you export (backups, quotes, PDFs) are under your control. Where you</li></ul><p>  store or send them is up to you.</p><h4>4. Estimates are tools, not guarantees</h4><p>Every number our apps produce \u2014 bids, prices, costs, calorie targets,</p><p>projections, schedules, totals \u2014 is an **estimate generated from the</p><p>information you enter and the settings you choose**. Outputs are aids for</p><p>your own judgment, not guarantees of price, profit, outcome, or result. You</p><p>are responsible for checking any output before relying on it (see also the</p><p>disclaimer that applies to your app: Health Disclaimer for fitness/nutrition</p><p>apps, Estimator Disclaimer for contractor tools). If an input is wrong, the</p><p>output will be wrong.</p><h4>5. Acceptable use</h4><p>Don't use the apps to break the law, infringe anyone's rights, or</p><p>misrepresent quotes, invoices, or records to your own customers. For the</p><p>fitness apps, the guardrails in the app (healthy-rate limits, calorie floor)</p><p>are part of the product \u2014 don't treat the app as a way around them.</p><h4>6. Provided \"as is\"</h4><p>The apps are provided **\"as is\" and \"as available,\" without warranties of</p><p>any kind**, express or implied \u2014 including merchantability, fitness for a</p><p>particular purpose, accuracy of calculations, and uninterrupted or</p><p>error-free operation \u2014 to the maximum extent allowed by law. Software has</p><p>bugs; browsers change; we work to fix problems but do not promise any app is</p><p>error-free or will work on every device or browser forever.</p><h4>7. Limitation of liability</h4><p>To the maximum extent allowed by law:</p><ul><li>We are **not liable for indirect, incidental, special, or consequential</li></ul><p>  damages** \u2014 including lost profits, lost or mispriced jobs, lost data, or</p><p>  business interruption \u2014 arising from use of the apps.</p><ul><li>Our total liability for any claim connected to an app is limited to the</li></ul><p>  <b>amount you paid for that app</b>.</p><ul><li>Nothing in these terms limits liability that cannot legally be limited.</li></ul><h4>8. Refunds</h4><p>Refunds are handled **by the storefront you bought from, under that</p><p>storefront's policy** \u2014 Gumroad's refund policy for Gumroad purchases, and</p><p>Google Play's refund policy for Play purchases. These terms do not add to,</p><p>replace, or override the storefront's refund rules. If a file is defective</p><p>and won't open, contact us at whitewolfoklahoma@gmail.com and we'll fix or</p><p>replace the file.</p><h4>9. Updates and changes to these terms</h4><ul><li>We may release updated versions of an app. Updates may add, change, or</li></ul><p>  remove features.</p><ul><li>We may update these terms. The version you agreed to is recorded in the</li></ul><p>  app (version number and date) at first-run acceptance. If terms change,</p><p>  the app may ask you to accept the new version once on next open. Updated</p><p>  terms apply going forward, not retroactively.</p><ul><li>If you don't agree to an updated version of the terms, stop using the app.</li></ul><h4>10. Governing law</h4><p>These terms are governed by the laws of the <b>State of Oklahoma</b>, USA.</p><p>(Attorney to confirm governing law and venue before publication.)</p><h4>11. Contact</h4><p>White Wolf Tree Service LLC (White Wolf Digital) \u2014</p><p>whitewolfoklahoma@gmail.com.</p><h4>CONNECTED FEATURES \u2014 takes effect only when these features ship</h4><p>*The sections below apply only to future connected features (device sync via</p><p>Health Connect, AI voice logging, and the AI Goal Preview in ForgeFit). They</p><p>do not apply to the current offline versions, which never transmit data.*</p><ul><li><b>Opt-in only.</b> Connected features are off by default. Each one asks for</li></ul><p>  your separate, explicit consent \u2014 on its own consent screen, in plain</p><p>  language \u2014 before anything leaves your device. Declining never disables</p><p>  the app's offline features.</p><ul><li><b>What gets sent.</b> Only what the consent screen names, only when you use</li></ul><p>  the feature: for example, a meal description (text, or audio only if cloud</p><p>  transcription is on) for AI voice logging, or the single photo you choose</p><p>  for an AI Goal Preview.</p><ul><li><b>No retention by us.</b> Our relay service passes your request to the named</li></ul><p>  AI provider and keeps nothing \u2014 no copies of your photos, audio,</p><p>  transcripts, or entries are stored on our servers. Provider handling is</p><p>  described on the consent screen and in the Privacy Policy.</p><ul><li><b>Health data stays on the device.</b> Device sync (Health Connect) reads</li></ul><p>  your health data on your phone and stores it in the app on your phone. It</p><p>  is not uploaded to us.</p><ul><li><b>Allowances.</b> Some connected features run on third-party AI services we</li></ul><p>  pay for per use, so they may include a monthly allowance described in the</p><p>  app (for example, a set number of AI previews or voice entries per month),</p><p>  with optional additional credits. Allowances and pricing will be shown in</p><p>  the app before you use the feature; they are not a subscription unless the</p><p>  app says so in plain words.</p><ul><li><b>Permissions.</b> Connected features may request device permissions (such</li></ul><p>  as Health Connect access or the microphone) at the moment you first use</p><p>  them. You can revoke permissions any time in your device settings; the</p><p>  related feature will simply stop working.</p>";
+var LEGAL_DISCLAIMER_HTML = "<h3>Estimator Disclaimer \u2014 Contractor &amp; Trade Tools</h3><p>**Applies to: TreeBid Pro, SnowBid, WashPrice Pro, RoofSquares, JobProfit</p><p>Tracker, FieldForms Toolkit, PaintPro, FenceDeck, MarketMaker, and the other</p><p>estimating/pricing tools sold under White Wolf Digital \u2014 including bundles</p><p>that contain them.**</p><h4>Estimating aids, not finished quotes</h4><ul><li>These apps are <b>estimating and record-keeping aids</b>. Every bid, price,</li></ul><p>  cost, measurement, and total they produce is an **estimate based on the</p><p>  information and rates you enter**.</p><ul><li>**You \u2014 the business owner \u2014 are responsible for verifying everything</li></ul><p>  before you quote a customer:** measurements and quantities, site</p><p>  conditions, your current material and labor costs, your rates and margins,</p><p>  taxes, permit and license requirements, disposal rules, and any contract</p><p>  terms.</p><ul><li>Default rates, presets, and sample data included in the apps are starting</li></ul><p>  points only. They are not market prices, not industry standards, and not</p><p>  a recommendation of what you should charge.</p><ul><li>A saved quote keeps the prices in effect when you created it (price</li></ul><p>  snapshot). Changing your presets later does not change saved quotes \u2014</p><p>  and a saved quote is still your responsibility to review before sending.</p><h4>Specific tools</h4><ul><li><b>TreeBid Pro:</b> tree work is dangerous and site-specific. Difficulty</li></ul><p>  factors and presets cannot see the actual tree, lean, rot, targets, or</p><p>  access. Inspect every job in person before final pricing. The \"Invoice</p><p>  with Wave\" feature is an open-and-paste handoff \u2014 TreeBid does not</p><p>  connect to Wave, and the invoice you send from Wave is yours.</p><ul><li><b>RoofSquares / measurement tools:</b> confirm roof measurements and pitch</li></ul><p>  in person or by your usual method before ordering materials.</p><ul><li><b>SnowBid / seasonal tools:</b> route times, snowfall amounts, and service</li></ul><p>  pricing vary by storm and site; seasonal contracts are your agreement</p><p>  with your customer, on your terms.</p><ul><li><b>JobProfit Tracker:</b> profit figures depend on the costs you enter.</li></ul><p>  The app is not accounting or tax software and does not replace your</p><p>  bookkeeper or accountant.</p><h4>Bottom line</h4><p>If an output and your judgment disagree, trust your judgment \u2014 then fix the</p><p>input. We are not responsible for jobs won, lost, or mispriced based on app</p><p>outputs, within the limits of the Terms of Use.</p>";
+(function(){
+  var lst = document.createElement("style");
+  lst.textContent = "@media print{ #legalOverlay{ display:none !important; } }";
+  document.head.appendChild(lst);
+})();
+function sanitizeLegal(v){
+  if(!v || typeof v !== "object") return null;
+  if(typeof v.termsVersion !== "string" || typeof v.acceptedDate !== "string") return null;
+  return { termsVersion: v.termsVersion.slice(0, 10), acceptedDate: v.acceptedDate.slice(0, 40), disclaimerShown: !!v.disclaimerShown };
+}
+function legalRecord(){
+  try{ var s = state; return (s && s.legal) ? sanitizeLegal(s.legal) : null; }catch(e){ return null; }
+}
+function legalVersionCmp(a, b){
+  var pa = String(a).split("."), pb = String(b).split(".");
+  for(var i = 0; i < 3; i++){ var d = (parseInt(pa[i], 10) || 0) - (parseInt(pb[i], 10) || 0); if(d) return d; }
+  return 0;
+}
+function legalAcceptLine(){
+  var rec = legalRecord();
+  if(rec && rec.acceptedDate) return "You agreed to Terms v" + rec.termsVersion + " on " + rec.acceptedDate.slice(0, 10) + ".";
+  return "No Terms acceptance is recorded on this device yet \u2014 the current Terms will be shown for your agreement.";
+}
+function legalSectionHTML(){
+  var h = '<div style="border-top:2px solid rgba(127,127,127,.35);margin-top:20px;padding-top:14px;">'
+    + '<h2>Legal</h2>'
+    + '<p>' + legalAcceptLine() + '</p>'
+    + '<h3>Terms of Use (v' + TERMS_VERSION + ')</h3>'
+    + '<div style="max-height:340px;overflow-y:auto;border:1px solid rgba(127,127,127,.4);border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.55;">' + LEGAL_TERMS_HTML + '</div>';
+  if(LEGAL_HAS_DISCLAIMER){
+    h += '<h3>Estimator Disclaimer</h3>'
+      + '<div style="max-height:260px;overflow-y:auto;border:1px solid rgba(127,127,127,.4);border-radius:8px;padding:10px 14px;font-size:14px;line-height:1.55;">' + LEGAL_DISCLAIMER_HTML + '</div>';
+  }
+  h += '<h3>Privacy</h3>'
+    + '<p>This app collects no data. It has no accounts, no sign-in, no analytics, and no server \u2014 everything you enter is stored only on this device, in this browser\u2019s storage, and nothing is transmitted anywhere. Files you export (backups, quotes, prints) are under your control. You are responsible for backing up your records with the app\u2019s export tools.</p>'
+    + '<p>Sold by White Wolf Tree Service LLC (White Wolf Digital) \u2014 whitewolfoklahoma@gmail.com</p>'
+    + '</div>';
+  return h;
+}
+function legalFillSection(){
+  var el = document.getElementById("legalSection");
+  if(!el) return;
+  var sig = legalAcceptLine();
+  if(el.getAttribute("data-legal-filled") === sig) return;
+  el.innerHTML = legalSectionHTML(); el.setAttribute("data-legal-filled", sig);
+}
+function legalRefreshSection(){
+  var el = document.getElementById("legalSection");
+  if(el){ el.innerHTML = legalSectionHTML(); el.setAttribute("data-legal-filled", legalAcceptLine()); }
+}
+function legalShowOverlay(isUpdate){
+  if(document.getElementById("legalOverlay")) return;
+  var ov = document.createElement("div");
+  ov.id = "legalOverlay";
+  ov.setAttribute("style", "position:fixed;inset:0;z-index:99999;background:rgba(8,10,14,.74);overflow-y:auto;padding:20px 12px;display:flex;align-items:flex-start;justify-content:center;");
+  var discBtn = LEGAL_HAS_DISCLAIMER ? '<button type="button" id="legalReadDisc" style="min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #9aa4b2;background:#ffffff;color:#1c2733;font-size:15px;cursor:pointer;">Read the Estimator Disclaimer</button>' : '';
+  var checkLabel = LEGAL_HAS_DISCLAIMER ? "I have read the disclaimer and I agree to the Terms of Use" : "I have read and I agree to the Terms of Use";
+  ov.innerHTML = '<div style="background:#ffffff;color:#1c2733;max-width:560px;width:100%;border-radius:14px;padding:22px 20px;box-shadow:0 18px 50px rgba(0,0,0,.45);font-size:15px;line-height:1.55;">'
+    + '<h2 style="margin:0 0 6px;font-size:21px;">' + LEGAL_APP_NAME + ' \u2014 Terms of Use</h2>'
+    + (isUpdate ? '<p style="background:#fdf3d7;border:1px solid #e4cf8a;border-radius:8px;padding:8px 10px;"><b>Our terms were updated (v' + TERMS_VERSION + ').</b></p>' : '')
+    + '<p style="font-size:16px;"><b>Your data stays on your device.</b><br><b>Estimates are aids, not guarantees.</b><br><b>You\'re responsible for checking outputs before you rely on them.</b></p>'
+    + '<p>The full Terms' + (LEGAL_HAS_DISCLAIMER ? ' and Disclaimer are' : ' are') + ' one tap away, now and any time in Settings \u2192 Legal.</p>'
+    + '<div id="legalReader" style="display:none;max-height:44vh;overflow-y:auto;border:1px solid #d5dbe3;border-radius:10px;padding:10px 14px;margin:10px 0;font-size:14px;"></div>'
+    + '<p style="display:flex;gap:8px;flex-wrap:wrap;"><button type="button" id="legalReadTerms" style="min-height:44px;padding:10px 14px;border-radius:10px;border:1px solid #9aa4b2;background:#ffffff;color:#1c2733;font-size:15px;cursor:pointer;">Read the full Terms</button>' + discBtn + '</p>'
+    + '<label style="display:flex;gap:10px;align-items:flex-start;margin:12px 0;cursor:pointer;"><input type="checkbox" id="legalCheck" style="width:22px;height:22px;min-width:22px;margin-top:1px;cursor:pointer;"><span>' + checkLabel + '</span></label>'
+    + '<button type="button" id="legalAgree" disabled style="min-height:52px;width:100%;border:0;border-radius:10px;background:#1f5fa8;color:#ffffff;font-size:17px;font-weight:700;cursor:pointer;opacity:.55;">I Agree</button>'
+    + '<p style="font-size:13px;color:#5a6675;margin-bottom:0;">Your records stay loaded behind this screen and are never deleted or locked, whether or not you agree now.</p>'
+    + '</div>';
+  document.body.appendChild(ov);
+  var reader = ov.querySelector("#legalReader");
+  var showing = "";
+  function toggleReader(kind){
+    if(showing === kind){ reader.style.display = "none"; showing = ""; return; }
+    reader.innerHTML = kind === "terms" ? LEGAL_TERMS_HTML : LEGAL_DISCLAIMER_HTML;
+    reader.style.display = "block"; showing = kind;
+    reader.scrollTop = 0;
+  }
+  ov.querySelector("#legalReadTerms").addEventListener("click", function(){ toggleReader("terms"); });
+  var db = ov.querySelector("#legalReadDisc");
+  if(db) db.addEventListener("click", function(){ toggleReader("disc"); });
+  var legalChk = ov.querySelector("#legalCheck");
+  var legalAgreeBtn = ov.querySelector("#legalAgree");
+  legalChk.addEventListener("change", function(){ legalAgreeBtn.disabled = !legalChk.checked; legalAgreeBtn.style.opacity = legalChk.checked ? "1" : ".55"; });
+  legalAgreeBtn.addEventListener("click", function(){
+    if(!legalChk.checked) return;
+    try{ state.legal = { termsVersion: TERMS_VERSION, acceptedDate: new Date().toISOString(), disclaimerShown: LEGAL_HAS_DISCLAIMER }; save(); }catch(e){}
+    if(ov.parentNode) ov.parentNode.removeChild(ov);
+    legalRefreshSection();
+  });
+}
+function legalInit(){
+  legalFillSection();
+  var rec = legalRecord();
+  if(rec && legalVersionCmp(rec.termsVersion, TERMS_VERSION) >= 0) return;
+  legalShowOverlay(!!rec);
+}
+if(typeof MutationObserver !== "undefined"){
+  var legalObs = new MutationObserver(function(){ legalFillSection(); });
+  legalObs.observe(document.documentElement, { childList: true, subtree: true });
+}
+if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", function(){ setTimeout(legalInit, 30); });
+else setTimeout(legalInit, 30);
+
+</script>
+</body>
+</html>
